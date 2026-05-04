@@ -5,7 +5,7 @@ import mediapipe as mp
 class HandDetector:
     """
     Detecta y rastrea landmarks de manos usando MediaPipe.
-    Diseñado para una sola mano (configurable) con imagen ya volteada (espejo).
+    Soporta una o dos manos; espera imagen ya volteada (espejo).
     """
 
     # Índices de los tips de los 4 dedos (sin pulgar) y sus articulaciones PIP
@@ -107,6 +107,20 @@ class HandDetector:
         if finger_count == 0:
             return "Cerrada"
         return f"Parcial ({finger_count})"
+
+    def find_all_positions(self, img) -> list[list[list[int]]]:
+        """
+        Devuelve una lista con los lm_list de cada mano detectada.
+        Útil para gestos que requieren dos manos simultáneas.
+        """
+        if not (self._results and self._results.multi_hand_landmarks):
+            return []
+        count = len(self._results.multi_hand_landmarks)
+        result = []
+        for i in range(count):
+            self.find_position(img, hand_no=i)
+            result.append(list(self._lm_list))
+        return result
 
     def hand_detected(self) -> bool:
         """True si hay al menos una mano visible en el frame actual."""
